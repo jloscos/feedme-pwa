@@ -1,0 +1,15 @@
+
+<div class="container-fluid">
+    <div *ngIf="feed" class="row">
+        <h2 class="d-inline-block">{{feed.title}}</h2>
+        <div class="pull-right"><button class="btn btn-default">Subscribe</button></div>
+    </div>
+    <div *ngIf="!feed" class="row">
+        <h2>All</h2>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-sm-12" *ngFor="let article of articleList">
+            <app-article-card [article]="article"></app-article-card>
+        </div>
+    </div>
+</div>

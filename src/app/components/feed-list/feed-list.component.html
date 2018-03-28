@@ -1,0 +1,10 @@
+<div class="col-12 col-md-3 col-xl-2 bd-sidebar">
+    <ul class="nav flex-column nav-pills">
+        <li class="nav-item"  >
+            <a routerLink="/articles" routerLinkActive="active">All</a>
+        </li>
+        <li *ngFor="let feed of feeds" class="nav-item" >
+            <a [routerLink]="['/articles', feed.feedId]" routerLinkActive="active">{{feed.title}}</a>
+        </li>
+    </ul>
+</div>

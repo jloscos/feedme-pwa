@@ -1,0 +1,15 @@
+.card-img-top {
+    max-height: 30vh;
+    display: block;
+    max-width:100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.card-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 15vh;
+    white-space: nowrap
+}

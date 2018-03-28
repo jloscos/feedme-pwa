@@ -1,0 +1,9 @@
+<div class="container-fluid" *ngIf="article">
+    <div class="row">
+        <h2>{{article.title}}</h2>
+        <h3>{{article.creator}}</h3>
+        <h4>{{article.publishDate.format("LLL")}}</h4>
+    </div>
+    <div [innerHtml]="content">
+    </div>
+</div>
