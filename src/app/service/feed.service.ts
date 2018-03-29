@@ -16,6 +16,8 @@ export class FeedService {
     private articleFromApi(data: any) : Article {
         const article:Article = Object.assign(new Article(), data);
         article.publishDate = moment(data.PublishDate);
+        if (data.image)
+            article.image = `/api/Feed/Article/Image`
         return article;
     }
 
@@ -36,7 +38,7 @@ export class FeedService {
             .toPromise();
     }
 
-    
+
     getArticlesForFeed(feedId: number, page: number) {
         return this.http.get(`/api/Feed/${feedId}/Articles?page=${page}`)
             .map((r:any[]) => r.map(a => this.articleFromApi(a)))

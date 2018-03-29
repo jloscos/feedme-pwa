@@ -7,6 +7,7 @@ export class Article {
     link: string;
     publishDate: moment.Moment;
     creator: string;
+    description: string;
     content: string;
     image: string;
     read: boolean = false;

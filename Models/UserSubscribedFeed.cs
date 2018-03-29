@@ -1,15 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace FeedMe.Models
 {
-    public class UserFeed
+    public class UserSubscribedFeed
     {
+        [Key]
         public int UserFeedId { get; set; }
         public int UserId { get; set; }
+        public virtual User User { get; set; }
         public int FeedId { get; set; }
-        public string Subscription { get; set; }
+        public virtual Feed Feed { get; set; }
     }
 }

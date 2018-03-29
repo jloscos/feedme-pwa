@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using FeedMe.Models;
 using FeedMe.Services;
@@ -14,10 +16,12 @@ namespace FeedMe.Controllers
     {
         private FeedMeContext db;
         private IFeedService _feed;
-        public FeedController(FeedMeContext context, IFeedService feedService)
+        private ISubscriptionService _subscription;
+        public FeedController(FeedMeContext context, IFeedService feedService, ISubscriptionService subscriptionService)
         {
             db = context;
             _feed = feedService;
+            _subscription = subscriptionService;
         }
 
         [HttpGet]
@@ -65,6 +69,26 @@ namespace FeedMe.Controllers
             return Ok(article);
         }
 
+        [HttpGet]
+        [Route("Article/{articleId}/Image")]
+        public async Task<IActionResult> GetArticleImage(int articleId)
+        {
+            var article = await db.Articles.FindAsync(articleId);
+            if (article == null)
+                return NotFound();
+            var req = WebRequest.Create(article.Image);
+            using (var response = await req.GetResponseAsync())
+            {
+                using (var stream = response.GetResponseStream())
+                {
+                    var ms = new MemoryStream();
+                    await stream.CopyToAsync(ms);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    return File(ms, response.ContentType);
+                }
+            }
+        }
+
 
         [HttpGet]
         [Route("Add")]
@@ -78,15 +102,21 @@ namespace FeedMe.Controllers
 
 
         [HttpGet]
-        [Route("{id}/Refresh")]
-        public async Task<IActionResult> RefreshFeed(int id)
+        [Route("Refresh")]
+        public async Task<IActionResult> RefreshFeeds()
         {
-            var feed = await db.Feeds.FindAsync(id);
-            if (feed == null)
-                return NotFound();
-            var articles = await _feed.GetArticlesFromFeed(feed);
-            db.Articles.AddRange(articles.Where(a => a.PublishDate > feed.LastUpdate));
-            feed.LastUpdate = DateTime.Now;
+            foreach (var feed in db.Feeds)
+            {
+                var articles = await _feed.GetArticlesFromFeed(feed);
+                var newArticles = articles.Where(a => a.PublishDate > feed.LastUpdate);
+                if (newArticles.Count() > 0)
+                {
+                    db.Articles.AddRange(newArticles);
+                    var lastArticle = newArticles.OrderByDescending(a => a.PublishDate).First();
+                    await _subscription.NotifyUsers(lastArticle);
+                }
+                feed.LastUpdate = DateTime.Now;
+            }
             await db.SaveChangesAsync();
             return Ok();
         }

@@ -15,6 +15,9 @@ namespace FeedMe.Models
         }
         public DbSet<Article> Articles { get; set; }
         public DbSet<Feed> Feeds { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<UserSubscribedFeed> UserSubscribedFeeds { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -28,6 +31,9 @@ namespace FeedMe.Models
             builder.Entity<Article>().Property(a => a.Title).IsRequired();
             builder.Entity<Article>().Property(a => a.PublishDate).IsRequired().HasDefaultValueSql("GetDate()");
             builder.Entity<Article>().HasAlternateKey(a => new { a.FeedId, a.PublishDate, a.Title });
+
+            builder.Entity<User>().ToTable("Users");
+            builder.Entity<User>().HasKey(u => u.UserId);
 
         }
     }

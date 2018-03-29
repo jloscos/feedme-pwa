@@ -13,11 +13,14 @@ namespace FeedMe.Models
         public int FeedId { get; set; }
 
         public virtual Feed Feed { get; set; }
+        [Required]
         public string Title { get; set; }
         public string Description { get; set; }
         public string Link { get; set; }
+        [Required]
         public DateTime PublishDate { get; set; }
         public string Creator { get; set; }
+        [Required]
         public string Content { get; set; }
 
         public string Image { get; set; }

@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FeedMe.Models;
 using FeedMe.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,15 @@ namespace FeedMe
             services.AddEntityFrameworkSqlServer();
             services.AddDbContext<FeedMe.Models.FeedMeContext>(o => o.UseSqlServer(Configuration.GetConnectionString("FeedMeDB")));
             services.AddTransient<IFeedService, FeedService>();
+
+            services.AddIdentity<User, IdentityRole>()
+                .AddEntityFrameworkStores<FeedMeContext>()
+                .AddDefaultTokenProviders();
+            services.AddAuthentication().AddMicrosoftAccount(opt =>
+            {
+                opt.ClientId = Configuration["Authentication:Microsoft:ClientId"];
+                opt.ClientSecret = Configuration["Authentication:Microsoft:ClientSecret"];
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

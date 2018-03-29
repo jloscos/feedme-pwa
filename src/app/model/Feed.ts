@@ -6,4 +6,5 @@ export class Feed {
     description: string;
     imageUrl: string;
     lastUpdate: moment.Moment;
+    subscribed: boolean;
 }
