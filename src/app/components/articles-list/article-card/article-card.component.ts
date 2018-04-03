@@ -12,7 +12,7 @@ export class ArticleCardComponent implements OnInit {
 
     @Input()
     article: Article;
-    
+
     isCached: boolean;
 
     get canRead() {
@@ -27,5 +27,9 @@ export class ArticleCardComponent implements OnInit {
         const art = await IndexDBHelper.getValue<Article>("article", this.article.articleId);
         this.article.read = art.read;
     }
-    
+
+    readLater() {
+        navigator.serviceWorker.controller.postMessage(this.article.articleId);
+        this.isCached = true;
+    }
 }

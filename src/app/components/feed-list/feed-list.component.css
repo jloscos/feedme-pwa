@@ -1,0 +1,26 @@
+.menu {
+    position: fixed;
+    float: left;
+    background-color: lightgray;
+    height: 100%;
+}
+.menu .nav-link {
+    overflow: hidden;
+    white-space: nowrap;
+}
+.menu .menu-label {
+    transition: width 1s;
+    width: 0px;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.menu .menu-label.show {
+    width: 80px;
+}
+
+.menu-icon {
+    width: 50px;
+    border: 1px solid;
+    border-radius: 50%;
+}

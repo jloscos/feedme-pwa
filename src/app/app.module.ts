@@ -10,8 +10,8 @@ import { ArticleComponent } from './components/article/article.component';
 import { FeedListComponent } from './components/feed-list/feed-list.component';
 import { FeedService } from './service/feed.service';
 import { SubscriptionService } from './service/subscription.service';
-import { MsalInterceptor } from './service/msal.interceptor';
-import { MsalService } from './service/msal.service';
+// import { MsalInterceptor } from './service/msal.interceptor';
+// import { MsalService } from './service/msal.service';
 
 const routes = [
     { path: 'articles', component: ArticlesListComponent },
@@ -35,8 +35,8 @@ const routes = [
         RouterModule.forRoot(routes)
     ],
     providers: [
-        { provide: HTTP_INTERCEPTORS, useClass: MsalInterceptor, multi: true },
-        MsalService,
+        // { provide: HTTP_INTERCEPTORS, useClass: MsalInterceptor, multi: true },
+        // MsalService,
         FeedService, SubscriptionService
     ],
     bootstrap: [AppComponent]

@@ -83,6 +83,25 @@ namespace FeedMe.Controllers
                 return NotFound();
             return Ok(article);
         }
+        [HttpGet]
+        [Route("{id}/Image")]
+        public async Task<IActionResult> GetFeedImage(int id)
+        {
+            var feed = await db.Feeds.FindAsync(id);
+            if (feed == null)
+                return NotFound();
+            var req = WebRequest.Create(feed.ImageUrl);
+            using (var response = await req.GetResponseAsync())
+            {
+                using (var stream = response.GetResponseStream())
+                {
+                    var ms = new MemoryStream();
+                    await stream.CopyToAsync(ms);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    return File(ms, response.ContentType);
+                }
+            }
+        }
 
         [HttpGet]
         [Route("Article/{articleId}/Image")]

@@ -30,6 +30,7 @@ export class FeedService {
 
     private feedFromApi(data: any): Feed {
         const feed: Feed = Object.assign(new Feed(), data);
+        feed.imageUrl = `/api/Feed/${feed.feedId}/Image`;
         return feed;
     }
 

@@ -1,12 +1,19 @@
-<div class="col-12 col-md-3 col-xl-2 bd-sidebar">
-    <ul class="nav flex-column nav-pills">
-        <li class="nav-item"  >
-            <a routerLink="/articles" routerLinkActive="active">All</a>
-        </li>
-        <li *ngFor="let feed of feeds" class="nav-item" >
-            <a [routerLink]="['/articles', feed.feedId]" routerLinkActive="active">{{feed.title}}
-                <span class="badge badge-pill badge-info">{{feed.nbNotRead}}</span>
-            </a>
-        </li>
-    </ul>
-</div>
+<ul class="nav flex-column menu">
+    <button class="navbar-toggler" type="button" aria-controls="menu-label" aria-expanded="false" aria-label="Toggle navigation" (click)="showMenu = !showMenu">
+        <span class="oi oi-menu"></span>
+    </button>
+    <li class="nav-item">
+        <a routerLink="/articles" routerLinkActive="active">
+            <span class="menu-icon"><span class="oi oi-list"></span></span>
+            <span class="badge badge-pill badge-info">{{nbNotReadAll}}</span>
+            <span class="menu-label" [class.show]="showMenu">All</span>
+        </a>
+    </li>
+    <li *ngFor="let feed of feeds" class="nav-item" >
+        <a [routerLink]="['/articles', feed.feedId]" routerLinkActive="active">
+            <span class="menu-icon"><img [src]="feed.imageUrl"/></span>
+            <span class="badge badge-pill badge-info">{{feed.nbNotRead}}</span>
+            <span class="menu-label" [class.show]="showMenu">{{feed.title}}</span>
+        </a>
+    </li>
+</ul>

@@ -19,7 +19,7 @@ export class ArticlesListComponent implements OnInit {
     private feedId: number;
     feed: Feed;
     currentPage = 0;
-    
+
     constructor(private _feed: FeedService, private _subscription: SubscriptionService, private route: ActivatedRoute) { }
 
      ngOnInit() {
@@ -27,8 +27,17 @@ export class ArticlesListComponent implements OnInit {
            this.feedId = +param.get('id');
            if (this.feedId)
                 IndexDBHelper.getValue<Feed>("feed", this.feedId).then(f => this.feed = f);
-           this.load();
+           this.loadFromDb();
         });
+    }
+
+    async loadFromDb() {
+        let art: Article[];
+        if (this.feedId)
+            art = await IndexDBHelper.getByIndex<Article>("article", "FeedIndex", this.feedId);
+        else
+            art = await IndexDBHelper.searchValues<Article>("article", "");
+        this.articleList = art.splice(0, 20);
     }
 
     async load(){
@@ -37,12 +46,7 @@ export class ArticlesListComponent implements OnInit {
         else
             this.articleList = await this._feed.getArticles(this.currentPage);
 
-        const art = await IndexDBHelper.searchValues<Article>("article", "");
-        this.articleList.forEach(a => {
-            const d = art.find(d => d.articleId == a.articleId);
-            a.read = (d && d.read) || a.read;
-        });
-        await IndexDBHelper.setValues("article", this.articleList.map(a => ({articleId: a.articleId, feedId: a.feedId, read: a.read})));
+        await IndexDBHelper.setValues("article", this.articleList);
     }
 
     get canSubscribe() {
@@ -56,6 +60,6 @@ export class ArticlesListComponent implements OnInit {
             await this._subscription.subscribeToFeed(this.feedId);
         this.feed = await IndexDBHelper.getValue<Feed>("feed", this.feedId);
         this.subscribing = false;
-    
+
     }
 }

@@ -24,18 +24,40 @@ export class ArticleComponent implements OnInit {
             this.articleId = param.get('articleId');
             this.load();
         });
+        const promptEvent = window["installPrompt"];
+        if (promptEvent) {
+            promptEvent.prompt();
+            promptEvent.userChoice.then(function(choiceResult) {
+                console.log(choiceResult.outcome);
+                if(choiceResult.outcome == 'dismissed') {
+                    console.log('User cancelled home screen install');
+                }
+                else {
+                    console.log('User added to home screen');
+                }
+                window["installPrompt"] = null;
+            });
+        }
     }
+
     async load() {
         this.gists = [];
         this.article = await this._feed.getArticleById(this.articleId);
+        this._feed.markAsRead(this.articleId);
+        this.replaceGists();
+        setTimeout(() => this.addEmbeddedGists());
+    }
+
+
+    replaceGists() {
         const reg = /\<script[^\>]+src="(https:\/\/gist.github.com\/([^\/]+)\/([^\.]+)\.js)"[^\>]*\>[^\<]*\<\/script\>/g;
         this.content = this.article.content.replace(reg, (c, url, user, id) => {
             this.gists.push({id: id, user:user, url: url});
             return `<span id="${user}-${id}"></span>`;
         });
         this.content = this.sanitizer.bypassSecurityTrustHtml(this.content);
-        setTimeout(() => this.addEmbeddedGists());
     }
+
 
     async addEmbeddedGists(){
         for(const g of this.gists) {

@@ -47,7 +47,7 @@ export class IndexDBHelper {
         const transaction: IDBTransaction = db.transaction(storeName, 'readwrite');
         const store: IDBObjectStore = transaction.objectStore(storeName);
         return Promise.all(values.map(val => {
-                new Promise<Boolean>((resolve, reject) => {            
+                new Promise<Boolean>((resolve, reject) => {
                 const request: IDBRequest = store.put(val);
                 request.onsuccess = event => {
                     resolve(true);
@@ -61,7 +61,7 @@ export class IndexDBHelper {
     }
 
     public static async getValue<T>(storeName: string, key: any): Promise<T> {
-        const db = await IndexDBHelper.openDB();        
+        const db = await IndexDBHelper.openDB();
         return new Promise<T>((resolve, reject) => {
             const transaction = db.transaction(storeName, 'readonly');
             const store = transaction.objectStore(storeName);
@@ -76,7 +76,7 @@ export class IndexDBHelper {
     }
 
     public static async searchValues<T>(storeName: string, search: any = null): Promise<T[]> {
-        const db = await IndexDBHelper.openDB();        
+        const db = await IndexDBHelper.openDB();
         const range = IDBKeyRange.lowerBound(search);
         let results = [];
         return new Promise<T[]>((resolve, reject) => {
@@ -98,10 +98,10 @@ export class IndexDBHelper {
         });
     }
 
-    
+
     public static async getByIndex<T>(storeName: string, indexName: string, key: any): Promise<T[]> {
         let results = [];
-        const db = await IndexDBHelper.openDB();                
+        const db = await IndexDBHelper.openDB();
         return new Promise<T[]>((resolve, reject) => {
             const transaction = db.transaction(storeName, 'readonly');
             const store = transaction.objectStore(storeName);
@@ -117,6 +117,22 @@ export class IndexDBHelper {
                 }
             };
             request.onerror = (event: any) => {
+                reject(event.error);
+            };
+        });
+    }
+
+    public static async delete(storeName: string, key: any): Promise<any> {
+        const db = await IndexDBHelper.openDB();
+        return new Promise<Boolean>((resolve, reject) => {
+            const transaction: IDBTransaction = db.transaction(storeName, 'readwrite');
+            const store: IDBObjectStore = transaction.objectStore(storeName);
+            const request = store.delete(key);
+            request.onsuccess = event => {
+                resolve(true);
+            };
+            request.onerror = (event: any) => {
+                transaction.abort();
                 reject(event.error);
             };
         });
