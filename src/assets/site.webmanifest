@@ -15,7 +15,7 @@
     ],
     "theme_color": "#ffac19",
     "background_color": "#1F54A9",
-    "start_url": "http://localhost:32579",
+    "start_url": "https://feedme-pwa.azurewebsites.net",
     "display": "standalone",
     "orientation": "any",
     "scope": "/"
