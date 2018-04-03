@@ -41,8 +41,8 @@ namespace FeedMe.Controllers
             var articles = await db.Articles
                 .Select(a => Article.WithoutContent(a))
                 .OrderByDescending(a => a.PublishDate)
-                .Skip(page * 20)
-                .Take(20)
+                .Skip(page * 50)
+                .Take(50)
                 .ToListAsync();
 
             articles = articles.GroupJoin(db.UserArticlesRead.Where(r => r.UserId == user.UserId),
@@ -63,8 +63,8 @@ namespace FeedMe.Controllers
                 .Where(a => a.FeedId == id)
                 .Select(a => Article.WithoutContent(a))
                 .OrderByDescending(a => a.PublishDate)
-                .Skip(page * 20)
-                .Take(20)
+                .Skip(page * 50)
+                .Take(50)
                 .ToListAsync();
             articles = articles.GroupJoin(db.UserArticlesRead.Where(r => r.UserId == user.UserId),
                     a => a.ArticleId,
@@ -108,7 +108,7 @@ namespace FeedMe.Controllers
         public async Task<IActionResult> GetArticleImage(int articleId)
         {
             var article = await db.Articles.FindAsync(articleId);
-            if (article == null)
+            if (article == null || article.Image == null)
                 return NotFound();
             var req = WebRequest.Create(article.Image);
             using (var response = await req.GetResponseAsync())
@@ -139,10 +139,12 @@ namespace FeedMe.Controllers
         [Route("Refresh")]
         public async Task<IActionResult> RefreshFeeds()
         {
-            foreach (var feed in db.Feeds)
+            var feeds = db.Feeds.ToList();
+            foreach (var feed in feeds)
             {
                 var articles = await _feed.GetArticlesFromFeed(feed);
-                var newArticles = articles.Where(a => a.PublishDate > feed.LastUpdate);
+                var newArticles = articles.Where(a => a.PublishDate > feed.LastUpdate && !db.Articles.Any(d => d.ArticleId == a.ArticleId));
+                
                 if (newArticles.Count() > 0)
                 {
                     db.Articles.AddRange(newArticles);
@@ -150,8 +152,8 @@ namespace FeedMe.Controllers
                     await _subscription.NotifyUsers(lastArticle);
                 }
                 feed.LastUpdate = DateTime.Now;
+                await db.SaveChangesAsync();
             }
-            await db.SaveChangesAsync();
             return Ok();
         }
 
@@ -170,6 +172,7 @@ namespace FeedMe.Controllers
                 UserId = user.UserId,
                 DateRead = DateTime.Now,
             });
+            await db.SaveChangesAsync();
             return Ok(article);
         }
     }

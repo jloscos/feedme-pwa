@@ -37,7 +37,9 @@ export class ArticlesListComponent implements OnInit {
             art = await IndexDBHelper.getByIndex<Article>("article", "FeedIndex", this.feedId);
         else
             art = await IndexDBHelper.searchValues<Article>("article", "");
-        this.articleList = art.splice(0, 20);
+        this.articleList = art.map(a => Article.fromApi(a)).sort((a, b) => b.publishDate.diff(a.publishDate)).splice(0, 20);
+        if (this.articleList.length == 0)
+            this.load();
     }
 
     async load(){
@@ -45,8 +47,8 @@ export class ArticlesListComponent implements OnInit {
             this.articleList = await this._feed.getArticlesForFeed(this.feedId, this.currentPage);
         else
             this.articleList = await this._feed.getArticles(this.currentPage);
-
-        await IndexDBHelper.setValues("article", this.articleList);
+        const art = this.articleList.map(a => Article.toApi(a));
+        await IndexDBHelper.setValues("article", art);
     }
 
     get canSubscribe() {

@@ -1,8 +1,11 @@
-<div class="container-fluid">
-    <button *ngIf="!authenticated" (click)="login()">login</button>
-    <button *ngIf="authenticated" (click)="logout()">logout</button>
+<div>
+    <!-- <button *ngIf="!authenticated" (click)="login()">login</button>
+    <button *ngIf="authenticated" (click)="logout()">logout</button> -->
     <app-feed-list></app-feed-list>
-    <div class="content">
+    <div class="content" >
         <router-outlet></router-outlet>
     </div>
+    <footer>
+            <a href="https://github.com/jloscos/feedme-pwa" target="_blank">source code</a>
+    </footer>
 </div>

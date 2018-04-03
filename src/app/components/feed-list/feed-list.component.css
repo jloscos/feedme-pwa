@@ -1,26 +1,88 @@
 .menu {
     position: fixed;
     float: left;
-    background-color: lightgray;
+    background-color: #FFAB19;
     height: 100%;
+    z-index: 1;
+    flex-wrap: nowrap;
+}
+.menu li {
+    padding: 15px 5px;
+}
+.menu button {
+    font-size: 1.5em;
+}
+.menu span {
+    color: #1F54A9;
 }
 .menu .nav-link {
     overflow: hidden;
     white-space: nowrap;
 }
 .menu .menu-label {
-    transition: width 1s;
+    transition: width 0.5s;
     width: 0px;
     display: inline-block;
     overflow: hidden;
     white-space: nowrap;
 }
-.menu .menu-label.show {
-    width: 80px;
+.menu .badge-info {
+    background-color: #1E375E;
 }
-
+.menu .menu-label.show {
+    width: 150px;
+}
+.menu .badge-pill {
+    position: relative;
+    margin-left: -13px;
+    top: -4px;
+    color: white;
+}
 .menu-icon {
-    width: 50px;
+    width: 40px;
+    height: 40px;
+    display: inline-block;
     border: 1px solid;
     border-radius: 50%;
+    overflow: hidden;
+}
+.menu-icon img {
+    width: 100%;
+}
+.menu-icon span {
+    font-size: 26px;
+    text-align: center;
+    line-height: 36px;
+    width: 100%;
+}
+
+.menu img {
+    display: block;
+    max-height: 60px;
+    max-width: 60px;
+    float: left;
+    object-fit: contain;
+    height: 100%;
+    width: 100%;
+}
+.menu .app-title {
+    font-size: 25px;
+    font-weight: bold;
+    float: left;
+}
+
+
+.nav-item:hover {
+    background-color: #1F54A9;
+    color: white;
+}
+.nav-item:hover a {
+    text-decoration: none;
+    color: white;
+}
+.nav-item:hover .menu-icon  {
+    border-color: white;
+}
+.nav-item:hover span {
+    color: white;
 }

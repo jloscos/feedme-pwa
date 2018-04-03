@@ -13,17 +13,19 @@ declare var navigator: ServiceWorkerNavigator;
     styleUrls: ["./app.component.css"]
 })
 export class AppComponent implements OnInit {
-    constructor(private msal: MsalService) {}
+    // constructor(private msal: MsalService) {}
     ngOnInit(): void {
         if ("serviceWorker" in navigator) {
             (<any>navigator).serviceWorker.register("/sw.js");
             navigator.serviceWorker.ready.then((sw: any) => {
-                sw.periodicSync.register({
-                    tag: "get-latest",
-                    minPeriod: 1 * 60 * 60 * 1000,  // toute les heures
-                    powerState: "avoid-draining",   // 'auto'
-                    networkState: "online"          // avoid-cellular
-                });
+                if (sw.periodicSync) {
+                    sw.periodicSync.register({
+                        tag: "get-latest",
+                        minPeriod: 1 * 60 * 60 * 1000,  // toute les heures
+                        powerState: "avoid-draining",   // 'auto'
+                        networkState: "online"          // avoid-cellular
+                    });
+                }
             });
         }
         window.addEventListener("beforeinstallprompt", e => {
@@ -33,6 +35,7 @@ export class AppComponent implements OnInit {
         });
     }
 
+    /*
     login() {
         this.msal.login();
     }
@@ -44,4 +47,5 @@ export class AppComponent implements OnInit {
     get authenticated() {
         return !!this.msal.user;
     }
+    */
 }

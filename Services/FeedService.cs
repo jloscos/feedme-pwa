@@ -87,6 +87,8 @@ namespace FeedMe.Services
             regex = new Regex("<a[^>]+>Read more</a>");
             if (a.Description != null)
                 a.Description = regex.Replace(a.Description, "");
+            if (a.Description != null && a.Content == null)
+                a.Content = a.Description;
             regex = new Regex("<img[^>]+src=\"([^\"]+)\"");
             var match = regex.Match(a.Content);
             if (match.Success)

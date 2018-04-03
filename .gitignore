@@ -54,3 +54,5 @@ appsettings.Developement.json
 *.sln
 *.user
 /appsettings.Development.json
+*.pubxml
+/appsettings.Production.json

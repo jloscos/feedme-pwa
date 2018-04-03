@@ -1,9 +1,8 @@
 .card-img-top {
-    max-height: 30vh;
+    height: 30vh;
     display: block;
     max-width:100%;
     width: auto;
-    height: auto;
     object-fit: contain;
 }
 
@@ -12,4 +11,18 @@
     text-overflow: ellipsis;
     max-height: 15vh;
     white-space: nowrap
+}
+
+.card-body {
+    height: 165px;
+    background-color: #1F54A9;
+    color: white;
+}
+.card .btn-primary {
+    background-color: #FFAB19;
+    border-color: #FFAB19; 
+}
+.card .btn-primary:hover {
+    background-color: #CB8D20;
+    border-color: #CB8D20; 
 }

@@ -13,7 +13,7 @@ import { HttpClient } from '@angular/common/http';
 export class ArticleComponent implements OnInit {
 
     article: Article;
-    articleId: string;
+    articleId: number;
     content: any;
     gists: any[];
 
@@ -21,7 +21,7 @@ export class ArticleComponent implements OnInit {
 
     ngOnInit() {
         this.route.paramMap.subscribe(param => {
-            this.articleId = param.get('articleId');
+            this.articleId = +param.get('articleId');
             this.load();
         });
         const promptEvent = window["installPrompt"];

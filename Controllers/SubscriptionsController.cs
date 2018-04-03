@@ -79,6 +79,20 @@ namespace FeedMe.Controllers
             await db.SaveChangesAsync();
             return Ok();
         }
+
+        [Route("DefaultUser")]
+        [HttpGet]
+        public async Task<IActionResult> AddDefaultUser()
+        {
+            db.Users.Add(new Models.User
+            {
+                Email = "jeremie.loscos@expaceo.com",
+                UserName = "j.loscos"
+            });
+            
+            await db.SaveChangesAsync();
+            return Ok();
+        }
     }
 }
 

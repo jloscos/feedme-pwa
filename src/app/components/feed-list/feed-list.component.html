@@ -1,16 +1,22 @@
 <ul class="nav flex-column menu">
-    <button class="navbar-toggler" type="button" aria-controls="menu-label" aria-expanded="false" aria-label="Toggle navigation" (click)="showMenu = !showMenu">
-        <span class="oi oi-menu"></span>
-    </button>
-    <li class="nav-item">
-        <a routerLink="/articles" routerLinkActive="active">
+    <li>
+        <img src="/assets/feedme_transparent.png"/>
+        <span class="menu-label app-title" [class.show]="showMenu">FeedMe</span>
+    </li>
+    <li>
+        <button class="navbar-toggler" type="button" aria-controls="menu-label" aria-expanded="false" aria-label="Toggle navigation" (click)="showMenu = !showMenu">
+            <span class="oi oi-menu"></span>
+        </button>
+    </li>
+    <li class="nav-item" routerLinkActive="active">
+        <a routerLink="/articles">
             <span class="menu-icon"><span class="oi oi-list"></span></span>
             <span class="badge badge-pill badge-info">{{nbNotReadAll}}</span>
             <span class="menu-label" [class.show]="showMenu">All</span>
         </a>
     </li>
-    <li *ngFor="let feed of feeds" class="nav-item" >
-        <a [routerLink]="['/articles', feed.feedId]" routerLinkActive="active">
+    <li *ngFor="let feed of feeds" class="nav-item" routerLinkActive="active">
+        <a [routerLink]="['/articles', feed.feedId]">
             <span class="menu-icon"><img [src]="feed.imageUrl"/></span>
             <span class="badge badge-pill badge-info">{{feed.nbNotRead}}</span>
             <span class="menu-label" [class.show]="showMenu">{{feed.title}}</span>

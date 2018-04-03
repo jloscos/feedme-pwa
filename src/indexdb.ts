@@ -21,6 +21,7 @@ export class IndexDBHelper {
                 }
                 if (!db.objectStoreNames.contains("cachedArticle")) {
                     const store = db.createObjectStore("cachedArticle", { keyPath: "cacheKey" });
+                    store.createIndex("ArticleIndex", "articleId", { unique: true });                    
                 }
             };
         });

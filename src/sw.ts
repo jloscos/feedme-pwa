@@ -13,20 +13,21 @@ const cacheKey = {
 declare var self: ServiceWorkerGlobalScope;
 
 self.addEventListener("install", event => {
+    const staticResources = [
+        "/",
+        "/favicon.ico",
+        "/index.html",
+        "/inline.bundle.js",
+        "/main.bundle.js",
+        "/polyfills.bundle.js",
+        "/scripts.bundle.js",
+        "/styles.bundle.js",
+        "/vendor.bundle.js"
+    ];
     event.waitUntil(
-        caches.open(cacheKey.static).then(cache => {
-            cache.addAll([
-                "/",
-                "/favicon.ico",
-                "/index.html",
-                "/inline.bundle.js",
-                "/main.bundle.js",
-                "/polyfills.bundle.js",
-                "/scripts.bundle.js",
-                "/styles.bundle.js",
-                "/vendor.bundle.js"
-            ]);
-        })
+        caches.open(cacheKey.static).then(cache => 
+            Promise.all(staticResources.map(r => cache.add(r)))
+        )
     );
 });
 
@@ -39,7 +40,7 @@ self.addEventListener("activate", event => {
             return Promise.all(
                 keys
                     .filter(k => {
-                        if (Object.keys(cacheKey).includes(k)) return false;
+                        if (Object.values(cacheKey).includes(k)) return false;
                         const article = articles.find(a => a.cacheKey == k);
                         if (article && article.cacheDate < cacheExpiration) return false;
                         return true;
@@ -49,7 +50,7 @@ self.addEventListener("activate", event => {
                         IndexDBHelper.delete("cachedArticle", k);
                     })
             );
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
@@ -60,25 +61,16 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 async function respondToFetch(event: FetchEvent): Promise<Response> {
     const staticCache = await caches.open(cacheKey.static);
     let response = await staticCache.match(event.request);
-    if (response) return response;
+    if (response) 
+        return response;
 
     if (event.request.url.startsWith(self.location.origin + "/articles")) {
         const cache = await caches.open(cacheKey.static);
-        return await cache.match("/index.html");
+        response = await cache.match("/index.html");
+        return response;
     }
 
-    const reg = /articles\/\d+\/(-?\d+)$/;
-    let matches = event.request.referrer.match(reg);
-    if (matches) {
-        const cacheKey = "article" + cacheVersion + "_" + matches[1];
-        return await cacheFirst(event, cacheKey);
-    }
-
-    if (event.request.url.match(/\/api\/Feed\/(\d+\/)?Articles/)) {
-        return await networkFirst(event, cacheKey.dynamic);
-    }
-
-    matches = event.request.url.match(/\/api\/Feed\/Article\/(-?\d+)$/i);
+    let matches = event.request.url.match(/\/api\/Feed\/Article\/(-?\d+)$/i);
     if (matches) {
         const cacheKey = "article" + cacheVersion + "_" + matches[1];
         await IndexDBHelper.setValue<CachedArticle>("cachedArticle", {
@@ -86,10 +78,32 @@ async function respondToFetch(event: FetchEvent): Promise<Response> {
             cacheKey: cacheKey,
             cacheDate: new Date()
         });
-        return cacheFirst(event, cacheKey);
+        response = await cacheFirst(event, cacheKey);
+        return response;
     }
 
-    return cacheFirst(event, cacheKey.dynamic);
+    if (event.request.url.match(/\/api\/Subscriptions/)) {
+        response = await fetch(event.request);
+        return response;
+    }
+
+    const reg = /articles\/\d+\/(-?\d+)$/;
+    matches = event.request.referrer.match(reg);
+    if (matches) {
+        const cacheKey = "article" + cacheVersion + "_" + matches[1];
+        response = await cacheFirst(event, cacheKey);
+        return response;
+    }
+
+    if (event.request.url.match(/\/api\/Feed\/(\d+\/)?Articles/)) {
+        response = await networkFirst(event, cacheKey.dynamic);
+        return response;
+    }
+
+
+
+    response =  await cacheFirst(event, cacheKey.dynamic);
+    return response;
 }
 
 async function cacheFirst(event: FetchEvent, cacheKey): Promise<Response> {
@@ -99,15 +113,17 @@ async function cacheFirst(event: FetchEvent, cacheKey): Promise<Response> {
         event.waitUntil(fetch(event.request).then(r => cache.put(event.request, r)));
         return response;
     }
-    response = await fetch(event.request);
-    event.waitUntil(cache.put(event.request, response));
+    response = await tryFetch(event.request);
+    if (response && response.ok)
+        event.waitUntil(cache.put(event.request, response.clone()));
     return response;
 }
 
 async function networkFirst(event: FetchEvent, cacheKey): Promise<Response> {
-    let response = await fetch(event.request);
+    let response = await tryFetch(event.request);
     if (response && response.ok) {
-        event.waitUntil(caches.open(cacheKey).then(c => c.put(event.request, response.clone())));
+        let clone = response.clone();
+        event.waitUntil(caches.open(cacheKey).then(c => c.put(event.request, clone)));
         return response;
     }
     const cache = await caches.open(cacheKey);
@@ -148,20 +164,23 @@ self.addEventListener("notificationclick", (event: any) => {
 });
 
 async function readLater(articleId) {
-    const request = `/api/Article/${articleId}`;
+    const request = `/api/Feed/Article/${articleId}`;
     const response = await fetch(request);
+    const clone = response.clone();
     const article = await response.json();
     const cache = await caches.open("article" + cacheVersion + "_" + articleId);
-    await cache.put(request, response);
+    await cache.put(request, clone);
     const content: string = article.content;
     const regex = /src="([^\"]+)"/g;
     let match: RegExpExecArray;
     while ((match = regex.exec(content)) != null) {
-        await cache.add(match[1]);
+        try {
+            await cache.add(match[1]);
+        } catch {}
     }
     await IndexDBHelper.setValue<CachedArticle>("cachedArticle", {
         articleId: articleId,
-        cacheKey: "article" + cacheVersion + "_" + articleId[1],
+        cacheKey: "article" + cacheVersion + "_" + articleId,
         cacheDate: new Date()
     });
 }
@@ -200,4 +219,13 @@ async function getLatestArticles() {
     await cache.put(request, response);
     const articles = await response.json();
     await IndexDBHelper.setValues("article", articles);
+}
+
+async function tryFetch(request) {
+    try {
+        return await fetch(request);
+    }
+    catch {
+        return null;
+    }
 }

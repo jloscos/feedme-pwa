@@ -20,14 +20,6 @@ export class FeedService {
 
     }
 
-    private articleFromApi(data: any): Article {
-        const article: Article = Object.assign(new Article(), data);
-        article.publishDate = moment(data.PublishDate);
-        if (data.image)
-            article.image = `/api/Feed/Article/${article.articleId}/Image`;
-        return article;
-    }
-
     private feedFromApi(data: any): Feed {
         const feed: Feed = Object.assign(new Feed(), data);
         feed.imageUrl = `/api/Feed/${feed.feedId}/Image`;
@@ -45,20 +37,20 @@ export class FeedService {
     }
     getArticles(page: number) {
         return this.http.get(`/api/Feed/Articles?page=${page}`)
-            .map((r: any[]) => r.map(a => this.articleFromApi(a)))
+            .map((r: any[]) => r.map(a => Article.fromApi(a)))
             .toPromise();
     }
 
 
     getArticlesForFeed(feedId: number, page: number) {
         return this.http.get(`/api/Feed/${feedId}/Articles?page=${page}`)
-            .map((r: any[]) => r.map(a => this.articleFromApi(a)))
+            .map((r: any[]) => r.map(a => Article.fromApi(a)))
             .toPromise();
     }
 
-    getArticleById(articleId: string) {
+    getArticleById(articleId: number) {
         return this.http.get(`/api/Feed/Article/${articleId}`)
-            .map(r => this.articleFromApi(r))
+            .map(r => Article.fromApi(r))
             .toPromise();
     }
 

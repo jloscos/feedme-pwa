@@ -45,8 +45,10 @@ namespace FeedMe.Services
             }
             catch (WebPushException exception)
             {
-                Console.WriteLine("Http STATUS code" + exception.StatusCode);
+                if (exception.StatusCode == System.Net.HttpStatusCode.Gone)
+                    db.Subscriptions.Remove(s);
             }
+            await db.SaveChangesAsync();
         }
     }
 }
