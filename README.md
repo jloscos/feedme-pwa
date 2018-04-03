@@ -2,4 +2,4 @@
 
 A RSS feed reader PWA
 
-[Demo](feedme-pwa.azurewebsites.net)
+[Demo](https://feedme-pwa.azurewebsites.net)
