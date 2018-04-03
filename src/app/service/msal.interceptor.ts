@@ -11,12 +11,13 @@ export class MsalInterceptor implements HttpInterceptor {
 
     public intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         return Observable.fromPromise(this.msalService.getToken().then(token => {
-            const JWT = `Bearer ${token}`;
-            return req.clone({
-                setHeaders: {
-                    Authorization: JWT,
-                },
-            });
+            if (token) 
+                req = req.clone({
+                        setHeaders: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+            return req;
         })).mergeMap(req => next.handle(req));
     }
 }

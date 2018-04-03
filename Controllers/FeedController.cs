@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 using FeedMe.Models;
 using FeedMe.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,12 +36,20 @@ namespace FeedMe.Controllers
         [Route("Articles")]
         public async Task<IActionResult> GetArticles(int page = 0)
         {
+            var user = await db.Users.FirstOrDefaultAsync();
+
             var articles = await db.Articles
                 .Select(a => Article.WithoutContent(a))
                 .OrderByDescending(a => a.PublishDate)
                 .Skip(page * 20)
                 .Take(20)
                 .ToListAsync();
+
+            articles = articles.GroupJoin(db.UserArticlesRead.Where(r => r.UserId == user.UserId),
+                                a => a.ArticleId,
+                                r => r.ArticleId,
+                                (a, r) => { a.Read = r.Count() > 0; return a; })
+                            .ToList();
             return Ok(articles);
         }
 
@@ -48,6 +57,8 @@ namespace FeedMe.Controllers
         [Route("{id}/Articles")]
         public async Task<IActionResult> GetFeedArticles(int id, int page = 0)
         {
+            var user = await db.Users.FirstOrDefaultAsync();
+
             var articles = await db.Articles
                 .Where(a => a.FeedId == id)
                 .Select(a => Article.WithoutContent(a))
@@ -55,9 +66,13 @@ namespace FeedMe.Controllers
                 .Skip(page * 20)
                 .Take(20)
                 .ToListAsync();
+            articles = articles.GroupJoin(db.UserArticlesRead.Where(r => r.UserId == user.UserId),
+                    a => a.ArticleId,
+                    r => r.ArticleId,
+                    (a, r) => { a.Read = r.Count() > 0; return a; })
+                .ToList();
             return Ok(articles);
         }
-
 
         [HttpGet]
         [Route("Article/{articleId}")]
@@ -119,6 +134,24 @@ namespace FeedMe.Controllers
             }
             await db.SaveChangesAsync();
             return Ok();
+        }
+
+        [HttpPost]
+        [Route("Article/{articleId}/Read")]
+        public async Task<IActionResult> MarkAsRead(int articleId)
+        {
+            var user = await db.Users.FirstOrDefaultAsync();
+            var article = await db.Articles.FindAsync(articleId);
+            if (article == null)
+                return NotFound();
+
+            db.UserArticlesRead.Add(new UserArticleRead
+            {
+                ArticleId = articleId,
+                UserId = user.UserId,
+                DateRead = DateTime.Now,
+            });
+            return Ok(article);
         }
     }
 }

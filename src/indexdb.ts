@@ -42,6 +42,24 @@ export class IndexDBHelper {
         });
     }
 
+    public static async setValues<T>(storeName: string, values: T[]): Promise<any> {
+        const db = await IndexDBHelper.openDB();
+        const transaction: IDBTransaction = db.transaction(storeName, 'readwrite');
+        const store: IDBObjectStore = transaction.objectStore(storeName);
+        return Promise.all(values.map(val => {
+                new Promise<Boolean>((resolve, reject) => {            
+                const request: IDBRequest = store.put(val);
+                request.onsuccess = event => {
+                    resolve(true);
+                };
+                request.onerror = (event: any) => {
+                    transaction.abort();
+                    reject(event.error);
+                };
+            });
+        }));
+    }
+
     public static async getValue<T>(storeName: string, key: any): Promise<T> {
         const db = await IndexDBHelper.openDB();        
         return new Promise<T>((resolve, reject) => {

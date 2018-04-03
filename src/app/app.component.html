@@ -1,4 +1,6 @@
 <div class="container-fluid">
+    <button *ngIf="!authenticated" (click)="login()">login</button>
+    <button *ngIf="authenticated" (click)="logout()">logout</button>
     <app-feed-list></app-feed-list>
     <router-outlet></router-outlet>
 </div>

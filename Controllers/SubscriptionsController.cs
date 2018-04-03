@@ -20,17 +20,18 @@ namespace FeedMe.Controllers
             _userManager = user;
         }
 
+
         [Route("Subscribe")]
         [HttpPost]
-        public async Task<IActionResult> Subscribe(ClientSubscription sub)
+        public async Task<IActionResult> Subscribe([FromBody] ClientSubscription sub)
         {
-            var user = await _userManager.GetUserAsync(User);
-
+            //var user = await _userManager.GetUserAsync(User);
+            var user = await db.Users.FirstOrDefaultAsync();
             var subscription = new Subscription
             {
                 UserId = user.UserId,
-                p256dh = sub.p256dh,
-                auth = sub.auth,
+                p256dh = sub.keys.p256dh,
+                auth = sub.keys.auth,
                 endpoint = sub.endpoint
             };
             db.Subscriptions.Add(subscription);
@@ -39,11 +40,12 @@ namespace FeedMe.Controllers
         }
         [Route("Unsubscribe")]
         [HttpPost]
-        public async Task<IActionResult> Unsubscribe(ClientSubscription sub)
+        public async Task<IActionResult> Unsubscribe([FromBody] ClientSubscription sub)
         {
-            var user = await _userManager.GetUserAsync(User);
+            //var user = await _userManager.GetUserAsync(User);
+            var user = await db.Users.FirstOrDefaultAsync();
 
-            var subscription = await db.Subscriptions.FirstOrDefaultAsync(s => s.UserId == user.UserId && s.auth == sub.auth);
+            var subscription = await db.Subscriptions.FirstOrDefaultAsync(s => s.UserId == user.UserId && s.auth == sub.keys.auth);
             db.Subscriptions.Remove(subscription);
             await db.SaveChangesAsync();
             return Ok();
@@ -51,21 +53,27 @@ namespace FeedMe.Controllers
 
         [Route("Feed")]
         [HttpPost]
-        public async Task<IActionResult> SubscribeFeed([FromBody] (int feedId, bool subscribe) data)
+        public async Task<IActionResult> SubscribeFeed([FromBody] FeedSubscription data)
         {
-            var user = await _userManager.GetUserAsync(User);
+            //var user = await _userManager.GetUserAsync(User);
+            var user = await db.Users.FirstOrDefaultAsync();
+
+            var subsc = await db.Subscriptions.FirstOrDefaultAsync(s => s.UserId == user.UserId && s.auth == data.subscription.keys.auth);
+            if (subsc == null)
+                return NotFound();
             if (data.subscribe)
             {
                 var subscribedFeed = new UserSubscribedFeed
                 {
                     UserId = user.UserId,
-                    FeedId = data.feedId
+                    FeedId = data.feedId,
+                    SubscriptionId = subsc.SubscriptionId
                 };
                 db.UserSubscribedFeeds.Add(subscribedFeed);
             }
             else
             {
-                var subscribedFeed = await db.UserSubscribedFeeds.FirstOrDefaultAsync(uf => uf.FeedId == data.feedId && uf.UserId == user.UserId);
+                var subscribedFeed = await db.UserSubscribedFeeds.FirstOrDefaultAsync(uf => uf.FeedId == data.feedId && uf.UserId == user.UserId && uf.SubscriptionId == subsc.SubscriptionId);
                 db.UserSubscribedFeeds.Remove(subscribedFeed);
             }
             await db.SaveChangesAsync();
@@ -74,9 +82,19 @@ namespace FeedMe.Controllers
     }
 }
 
+public class FeedSubscription
+{
+    public int feedId { get; set; }
+    public bool subscribe { get; set; }
+    public ClientSubscription subscription { get; set; }
+}
 public class ClientSubscription
 {
     public string endpoint { get; set; }
+    public ClientSubscriptionKeys keys { get; set; }
+}
+public class ClientSubscriptionKeys
+{
     public string p256dh { get; set; }
     public string auth { get; set; }
 }

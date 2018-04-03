@@ -1,6 +1,7 @@
 using FeedMe.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,9 +38,10 @@ namespace FeedMe.Services
             var subscription = new PushSubscription(s.endpoint, s.p256dh, s.auth);
             var vapidDetails = new VapidDetails(_conf["Push:subject"], _conf["Push:publicKey"], _conf["Push:privateKey"]);
             var webPushClient = new WebPushClient();
+            var payload = JsonConvert.SerializeObject(new { feedId = article.FeedId, articleId = article.ArticleId, title = article.Title });
             try
             {
-                await webPushClient.SendNotificationAsync(subscription, article.ArticleId.ToString(), vapidDetails);
+                await webPushClient.SendNotificationAsync(subscription, payload, vapidDetails);
             }
             catch (WebPushException exception)
             {

@@ -13,7 +13,7 @@ declare var navigator : ServiceWorkerNavigator
 @Injectable()
 export class SubscriptionService {
 
-    private publicKey:string = "";
+    private publicKey:string = "BLdYcC_q2NKAtZST1N65NeJso_h41YdcQx2dyE6lcuDIJh_3RR-moTD4yW6aD0Tjq3ZC0lG2n5j3a2KS3urOalk";
 
     constructor(private http: HttpClient) {
 
@@ -25,16 +25,22 @@ export class SubscriptionService {
 
     async subscribeToFeed(feedId: number) {
         const sw = await navigator.serviceWorker.ready;
-        const subscription = sw.pushManager.getSubscription();
+        let subscription = await sw.pushManager.getSubscription();
         if (!subscription)
-            await this.subscribe();
-        await this.http.post("/api/Subscriptions/Feed", {feedId: feedId, subscribe: true}).toPromise();
+            subscription = await this.subscribe();
+        if (!subscription)
+            return;
+        await this.http.post("/api/Subscriptions/Feed", {feedId: feedId, subscribe: true, subscription: subscription}).toPromise();
         const feed = await IndexDBHelper.getValue<Feed>("feed", feedId);
         feed.subscribed = true;
         await IndexDBHelper.setValue<Feed>("feed", feed);
     }
 
     async unSubscribeFromFeed(feedId: number) {
+        const sw = await navigator.serviceWorker.ready;
+        const subscription = sw.pushManager.getSubscription();
+        if (subscription)
+            await this.http.post("/api/Subscriptions/Feed", {feedId: feedId, subscribe: false, subscription: subscription}).toPromise();
         const feeds = await IndexDBHelper.searchValues<Feed>("feed", "");
         if (feeds.filter(f => f.subscribed && f.feedId != feedId).length == 0)
             await this.unsubscribe();
@@ -46,10 +52,11 @@ export class SubscriptionService {
     async subscribe() {
         if ((<any>Notification).permission !== "granted")
             if (await Notification.requestPermission() === "denied")
-                return false;
+                return null;
         const sw = await navigator.serviceWorker.ready;
         const subscription = await sw.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(this.publicKey)});
         await this.http.post("/api/Subscriptions/Subscribe", subscription.toJSON()).toPromise();
+        return subscription;
     }
 
     async unsubscribe() {

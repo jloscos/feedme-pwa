@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -25,6 +26,8 @@ namespace FeedMe.Models
 
         public string Image { get; set; }
 
+        [NotMapped]
+        public Boolean Read { get; set; }
         public static Article WithoutContent(Article a)
         {
             return new Article

@@ -1,8 +1,9 @@
 import { request } from "http";
 import { IndexDBHelper } from "./indexdb";
 import { CachedArticle } from "./app/model/CachedArticle";
+import { environment } from "./environments/environment";
 
-const cacheVersion = "1";
+const cacheVersion = environment.cacheVersion;
 
 const cacheKey = {
     static: "static" + cacheVersion,
@@ -72,12 +73,18 @@ async function respondToFetch(event: FetchEvent) {
             response = await fetch(event.request);
             cache.put(event.request, response.clone());
         }
+        else {
+            event.waitUntil(fetch(event.request).then(r =>  cache.put(event.request, r)));
+        }
         return response;
     }
 
     const cache = await caches.open(cacheKey.dynamic);
     response = await cache.match(event.request);
-    if (response) return response;
+    if (response) {
+        event.waitUntil(fetch(event.request).then(r =>  cache.put(event.request, r)));
+        return response;
+    }
 
     response = await fetch(event.request);
     cache.put(event.request, response.clone());
@@ -93,13 +100,64 @@ async function respondToFetch(event: FetchEvent) {
 }
 
 self.addEventListener("push", (event: PushEvent) => {
-    console.log(event.data);
+    console.log(event);
+    const payload:any = event.data.json();
     event.waitUntil(
-        self.registration.showNotification("FeedMe", {
-            body: "Push Notification Subscription Management",
+        self.registration.showNotification("FeedMe", <any>{
+            body: payload.Title,
             dir: "ltr",
             tag: "feedme",
-            icon: ""
+            icon: "/assets/icon-50x50.png",
+            badge: "/assets/icon-50x50.png",
+            image: `/api/Feed/Article/${payload.articleId}/Image`,
+            data: payload,
+            actions: [
+                {action: "read", title: "Read now"},
+                {action: "later", title: "Read later"},
+            ]
         })
     );
+});
+
+self.addEventListener("notificationclick", (event: any) => {
+    const url = event.target.location.origin;
+    const feedId = event.notification.data.feedId;
+    const articleId = event.notification.data.articleId;
+    event.notification.close();
+    if (event.action == "later") {
+        readLater(url, articleId);
+    } else {
+        event.waitUntil(self.clients.openWindow(`${url}/articles/${feedId}/${articleId}`));
+    }
+});
+
+
+async function readLater(origin, articleId) {
+    const request = origin + `/api/Article/${articleId}`;
+    const response = await fetch(request);
+    const article = await response.json();
+    const cache = await caches.open("article" + cacheVersion + "_" + articleId);
+    await cache.put(request, response);
+    const content: string = article.content;
+    const regex = /src="([^\"]+)"/g;
+    let match: RegExpExecArray;
+    while ((match = regex.exec(content)) != null) {
+        await cache.add(match[1]);
+    }
+    await IndexDBHelper.setValue<CachedArticle>("cachedArticle", {
+        articleId: articleId,
+        cacheKey: "article" + cacheVersion + "_" + articleId[1],
+        cacheDate: new Date()
+    });
+}
+
+
+self.addEventListener("sync", (event: SyncEvent) => {
+    if (event.tag.startsWith("read-")) {
+        const articleId = parseInt(event.tag.substr(5));
+        event.waitUntil(fetch(`/api/Feed/Article/${articleId}/Read`, {
+            method: "POST",
+            body: ""
+        }));
+    }
 });

@@ -4,5 +4,10 @@
 // The list of which env maps to which file can be found in `.angular-cli.json`.
 
 export const environment = {
-  production: false
+    production: false,
+    cacheVersion: "1",
+    msalConfig: {
+        clientID: "fceb10ef-673b-477c-a29e-4964a7d5470e",
+        graphScopes: ["https://graph.microsoft.com/user.read"]
+    }
 };

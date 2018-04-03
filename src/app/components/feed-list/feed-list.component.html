@@ -4,7 +4,9 @@
             <a routerLink="/articles" routerLinkActive="active">All</a>
         </li>
         <li *ngFor="let feed of feeds" class="nav-item" >
-            <a [routerLink]="['/articles', feed.feedId]" routerLinkActive="active">{{feed.title}}</a>
+            <a [routerLink]="['/articles', feed.feedId]" routerLinkActive="active">{{feed.title}}
+                <span class="badge badge-pill badge-info">{{feed.nbNotRead}}</span>
+            </a>
         </li>
     </ul>
 </div>

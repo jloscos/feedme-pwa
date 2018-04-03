@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <div *ngIf="feed" class="row">
         <h2 class="d-inline-block">{{feed.title}}</h2>
-        <div class="pull-right"><button class="btn btn-default">Subscribe</button></div>
+        <div class="pull-right"><button class="btn btn-default" [disabled]="!canSubscribe" (click)="toggleSubscribe()">Subscribe</button></div>
     </div>
     <div *ngIf="!feed" class="row">
         <h2>All</h2>

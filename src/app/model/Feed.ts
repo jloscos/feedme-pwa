@@ -7,4 +7,5 @@ export class Feed {
     imageUrl: string;
     lastUpdate: moment.Moment;
     subscribed: boolean;
+    nbNotRead: number;
 }

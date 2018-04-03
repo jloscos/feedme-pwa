@@ -10,8 +10,10 @@ namespace FeedMe.Models
     {
         [Key]
         public int UserFeedId { get; set; }
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
         public virtual User User { get; set; }
+        public int SubscriptionId { get; set; }
+        public Subscription Subscription { get; set; }
         public int FeedId { get; set; }
         public virtual Feed Feed { get; set; }
     }

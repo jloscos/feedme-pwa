@@ -1,7 +1,6 @@
 import { Injectable, InjectionToken, Inject } from "@angular/core";
 import * as Msal from "msal";
-
-export const MSAL_CONFIG = new InjectionToken<string>("MSAL_CONFIG");
+import { environment } from "../../environments/environment";
 
 export interface MsalConfig {
     clientID: string;
@@ -13,69 +12,49 @@ export interface MsalConfig {
 @Injectable()
 export class MsalService {
     public error: string;
-    public user: any;
-
+    private _user: any;
     private app: Msal.UserAgentApplication;
 
-    constructor(@Inject(MSAL_CONFIG) private config: MsalConfig) {
-        const authority =
-            config.tenant && config.signUpSignInPolicy
-                ? `https://login.microsoftonline.com/tfp/${config.tenant}/${config.signUpSignInPolicy}`
-                : "";
-        this.app = new Msal.UserAgentApplication(config.clientID, authority, this.authCallback, {
+
+    constructor() {
+        this.app = new Msal.UserAgentApplication(environment.msalConfig.clientID, null, this.authCallback, {
             redirectUri: window.location.origin
         });
-        this.app = new Msal.UserAgentApplication(config.clientID, authority, () => {});
+        // this.app = new Msal.UserAgentApplication(environment.msalConfig.clientID, null, () => {});
     }
 
-    get authenticated() {
-        if (!this.user) {
-            this.user = this.app.getUser();
-        }
-        return !!this.user;
-    }
-
-    public getUser() {
-        if (this.authenticated) return this.user;
-        return {};
-    }
-
-    get token() {
-        return this.getToken();
+    get user() {
+        if (!this._user)
+            this._user = this.app.getUser();
+        return this._user;
     }
 
     public login() {
-        return this.app.loginPopup(this.config.graphScopes).then(idToken => {
+        return this.app.loginPopup(environment.msalConfig.graphScopes).then(idToken => {
             return this.getToken().then(() => {
                 Promise.resolve(this.app.getUser());
             });
         });
     }
 
-    public getToken(): Promise<string> {
+    public getToken() {
         return this.app
-            .acquireTokenSilent(this.config.graphScopes)
-            .then(token => {
-                return token;
-            })
-            .catch(error => {
-                return this.app
-                    .acquireTokenPopup(this.config.graphScopes)
-                    .then(token => {
-                        return Promise.resolve(token);
-                    })
-                    .catch(innererror => {
-                        return Promise.resolve("");
-                    });
-            });
+        .acquireTokenSilent(environment.msalConfig.graphScopes)
+        .then(token => {
+            return token;
+        })
+        .catch(error => {
+            console.log(error);
+        });
     }
 
     public logout() {
-        this.user = null;
+        this._user = null;
         this.app.logout();
     }
 
     private authCallback(errorDesc: any, token: any, error: any, tokenType: any) {
+        console.log("token : " + token);
         if (error) {
             console.error(`${error} ${errorDesc}`);
         }
