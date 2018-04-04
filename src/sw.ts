@@ -22,10 +22,15 @@ self.addEventListener("install", event => {
         "/polyfills.bundle.js",
         "/scripts.bundle.js",
         "/styles.bundle.js",
-        "/vendor.bundle.js"
+        "/vendor.bundle.js",
+        "/styles.bundle.css",
+        "/assets/feedme_transparent.png",
+        "/assets/icon/eye-4x.png",
+        "/assets/icon/timer-4x.png",
+        "open-iconic.woff"
     ];
     event.waitUntil(
-        caches.open(cacheKey.static).then(cache => 
+        caches.open(cacheKey.static).then(cache =>
             Promise.all(staticResources.map(r => cache.add(r)))
         )
     );
@@ -33,24 +38,29 @@ self.addEventListener("install", event => {
 
 self.addEventListener("activate", event => {
     event.waitUntil(
-        caches.keys().then(async keys => {
-            const articles = await IndexDBHelper.searchValues<CachedArticle>("cachedArticle", 0);
-            const cacheExpiration = new Date();
-            cacheExpiration.setDate(cacheExpiration.getDate() + 30);
-            return Promise.all(
-                keys
-                    .filter(k => {
-                        if (Object.values(cacheKey).includes(k)) return false;
-                        const article = articles.find(a => a.cacheKey == k);
-                        if (article && article.cacheDate < cacheExpiration) return false;
-                        return true;
-                    })
-                    .map(k => {
-                        caches.delete(k);
-                        IndexDBHelper.delete("cachedArticle", k);
-                    })
-            );
-        }).then(() => self.clients.claim())
+        caches
+            .keys()
+            .then(async keys => {
+                const articles = await IndexDBHelper.searchValues<CachedArticle>("cachedArticle", 0);
+                const cacheExpiration = new Date();
+                cacheExpiration.setDate(cacheExpiration.getDate() + 30);
+                return Promise.all(
+                    keys
+                        .filter(k => {
+                            if (Object.values(cacheKey).includes(k))
+                                return false;
+                            const article = articles.find(a => a.cacheKey == k);
+                            if (article && article.cacheDate < cacheExpiration)
+                                return false;
+                            return true;
+                        })
+                        .map(k => {
+                            caches.delete(k);
+                            IndexDBHelper.delete("cachedArticle", k);
+                        })
+                );
+            })
+            .then(() => self.clients.claim())
     );
 });
 
@@ -61,7 +71,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 async function respondToFetch(event: FetchEvent): Promise<Response> {
     const staticCache = await caches.open(cacheKey.static);
     let response = await staticCache.match(event.request);
-    if (response) 
+    if (response)
         return response;
 
     if (event.request.url.startsWith(self.location.origin + "/articles")) {
@@ -100,9 +110,7 @@ async function respondToFetch(event: FetchEvent): Promise<Response> {
         return response;
     }
 
-
-
-    response =  await cacheFirst(event, cacheKey.dynamic);
+    response = await cacheFirst(event, cacheKey.dynamic);
     return response;
 }
 
@@ -185,13 +193,6 @@ async function readLater(articleId) {
     });
 }
 
-self.addEventListener("message", async (event: MessageEvent) => {
-    if (event.data.action == "read-later") {
-        const articleId = event.data.articleId;
-        readLater(articleId);
-    }
-});
-
 self.addEventListener("sync", (event: SyncEvent) => {
     if (event.tag.startsWith("read-")) {
         const articleId = parseInt(event.tag.substr(5));
@@ -203,6 +204,21 @@ self.addEventListener("sync", (event: SyncEvent) => {
         );
     }
 });
+
+self.addEventListener("message", async (event: MessageEvent) => {
+    if (event.data.action == "read-later") {
+        const articleId = event.data.articleId;
+        readLater(articleId);
+    }
+});
+
+async function tryFetch(request) {
+    try {
+        return await fetch(request);
+    } catch {
+        return null;
+    }
+}
 
 self.addEventListener("periodicsync", event => {
     if (event.registration.tag == "get-latest") {
@@ -219,13 +235,4 @@ async function getLatestArticles() {
     await cache.put(request, response);
     const articles = await response.json();
     await IndexDBHelper.setValues("article", articles);
-}
-
-async function tryFetch(request) {
-    try {
-        return await fetch(request);
-    }
-    catch {
-        return null;
-    }
 }

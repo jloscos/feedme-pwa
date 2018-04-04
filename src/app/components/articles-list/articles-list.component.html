@@ -2,9 +2,9 @@
 <div class="container-fluid">
     <div *ngIf="feed" class="row">
         <h2 class="d-inline-block">{{feed.title}}</h2>
-        <div class="pull-right">
-            <button class="btn btn-default" *ngIf="!feed.subscribed" [disabled]="!canSubscribe" (click)="toggleSubscribe()"><span class="oi oi-bell" title="subscribe"></span></button>
-            <button class="btn btn-default" *ngIf="feed.subscribed" [disabled]="!canSubscribe" (click)="toggleSubscribe()"><span class="oi oi-ban" title="unsubscribe"></span></button>
+        <div class="pull-right" *ngIf="hasPermission">
+            <button class="btn btn-default" *ngIf="!feed.subscribed" [disabled]="subscribing" (click)="toggleSubscribe()"><span class="oi oi-bell" title="subscribe"></span></button>
+            <button class="btn btn-default" *ngIf="feed.subscribed" [disabled]="subscribing" (click)="toggleSubscribe()"><span class="oi oi-ban" title="unsubscribe"></span></button>
         </div>
     </div>
     <div *ngIf="!feed" class="row">

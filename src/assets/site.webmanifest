@@ -18,5 +18,5 @@
     "start_url": "https://feedme-pwa.azurewebsites.net",
     "display": "standalone",
     "orientation": "any",
-    "scope": "/"
+    "scope": "https://feedme-pwa.azurewebsites.net/"
 }

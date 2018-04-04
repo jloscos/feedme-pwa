@@ -38,8 +38,7 @@ export class ArticlesListComponent implements OnInit {
         else
             art = await IndexDBHelper.searchValues<Article>("article", "");
         this.articleList = art.map(a => Article.fromApi(a)).sort((a, b) => b.publishDate.diff(a.publishDate)).splice(0, 20);
-        if (this.articleList.length == 0)
-            this.load();
+        this.load();
     }
 
     async load(){
@@ -51,9 +50,10 @@ export class ArticlesListComponent implements OnInit {
         await IndexDBHelper.setValues("article", art);
     }
 
-    get canSubscribe() {
-        return this._subscription.hasPermission && !this.subscribing;
+    get hasPermission() {
+        return this._subscription.hasPermission;
     }
+
     async toggleSubscribe() {
         this.subscribing = true;
         if (this.feed.subscribed)
